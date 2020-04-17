@@ -1,0 +1,6 @@
+---
+all:
+  children:
+    sonarqube:
+      hosts:
+        sonarqube001:

@@ -1,0 +1,92 @@
+# stack file for sonarqube deployment
+# author: Marco Bellaccini
+
+version: '3.7' # Compose file format
+
+services:
+    # application
+    sonarqube:
+        image: sonarqube:community
+        deploy:
+            restart_policy:
+                condition: any
+        networks:
+            - sonarqube_net
+        volumes:
+            - type: volume
+              source: sonarqube_data
+              target: /opt/sonarqube/data
+            - type: volume
+              source: sonarqube_extensions
+              target: /opt/sonarqube/extensions
+            - type: volume
+              source: sonarqube_logs
+              target: /opt/sonarqube/logs
+        secrets:
+            - source: sonar_properties
+              target: /opt/sonarqube/conf/sonar.properties
+        # depends_on omitted because won't work with swarm
+    # database
+    postgres:
+        image: postgres:12
+        deploy:
+            restart_policy:
+                condition: any
+        networks:
+            - sonarqube_net
+        environment:
+            - POSTGRES_USER_FILE=/run/secrets/postgres_user
+            - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+            - POSTGRES_DB_FILE=/run/secrets/postgres_db
+        volumes:
+            - type: volume
+              source: sq_postgres_db
+              target: /var/lib/postgresql/data
+        secrets:
+            - postgres_user
+            - postgres_password
+            - postgres_db
+    # TLS-offloading reverse-proxy
+    nginx:
+        image: nginx:alpine
+        ports:
+            - "80:80"
+            - "443:443"
+        deploy:
+            restart_policy:
+                condition: any
+        networks:
+            - sonarqube_net
+        secrets:
+            - sonarqube_key
+            - sonarqube_crt
+        configs:
+            - source: nginx_sonarqube_conf
+              target: /etc/nginx/conf.d/sonarqube.conf
+
+networks:
+    sonarqube_net: # defaults to bridge mode when running on a single node
+
+volumes:
+    sonarqube_data:
+    sonarqube_extensions:
+    sonarqube_logs:
+    sq_postgres_db:
+
+secrets:
+    sonarqube_key:
+        file: secrets/sonarqube.key
+    sonarqube_crt:
+        file: secrets/sonarqube.crt
+    sonar_properties:
+        file: secrets/sonar.properties
+    postgres_user:
+        file: secrets/postgres_user
+    postgres_password:
+        file: secrets/postgres_password
+    postgres_db:
+        file: secrets/postgres_db
+
+configs:
+    nginx_sonarqube_conf:
+        file: configs/nginx_sonarqube.conf

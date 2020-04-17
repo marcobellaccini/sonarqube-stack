@@ -1,0 +1,26 @@
+---
+- hosts: sonarqube
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+  - name: Install dependencies for Ansible deployment
+    apt:
+      pkg:
+      - python3-jsondiff
+      - python3-yaml
+    become: yes
+  - name: Copy docker stack folder
+    copy:
+      src: sonarqube-docker-stack
+      dest: /etc/docker-stacks
+      owner: root
+      group: docker
+      mode: u=r,g=r,o=
+    become: yes
+  - name: Deploy sonarqube stack
+    docker_stack:
+      state: present
+      name: sonarqube_st
+      compose:
+        - /etc/docker-stacks/sonarqube-docker-stack/sonarqube-stack.yml
+    become: yes # this is here for the sake of simplicity
