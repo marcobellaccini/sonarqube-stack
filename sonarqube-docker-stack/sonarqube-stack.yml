@@ -10,6 +10,13 @@ services:
         deploy:
             restart_policy:
                 condition: any
+            resources:
+                limits:
+                    cpus: '0.50'
+                    memory: 3G
+                reservations:
+                    cpus: '0.25'
+                    memory: 2G
         networks:
             - sonarqube_net
         volumes:
@@ -32,6 +39,13 @@ services:
         deploy:
             restart_policy:
                 condition: any
+            resources:
+                limits:
+                    cpus: '0.50'
+                    memory: 2G
+                reservations:
+                    cpus: '0.25'
+                    memory: 1G
         networks:
             - sonarqube_net
         environment:
@@ -55,6 +69,13 @@ services:
         deploy:
             restart_policy:
                 condition: any
+            resources:
+                limits:
+                    cpus: '0.50'
+                    memory: 500M
+                reservations:
+                    cpus: '0.25'
+                    memory: 250M
         networks:
             - sonarqube_net
         secrets:
